@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 public class NotificationService {
     
     private final NotificationRepository notificationRepository;
+    private final QueueService queueService;
 
     public NotificationResponse createNotification(NotificationRequest request){
         Notification notification = Notification.builder()
@@ -22,6 +23,9 @@ public class NotificationService {
                                     .body(request.getBody())
                                     .build(); // status and timestamps handled by @PrePersist
         Notification saved = notificationRepository.save(notification);
+
+        // enqueue for async processing 
+        queueService.enqueue(saved); // default priority
 
         return NotificationResponse.builder()
                 .id(saved.getId())
